@@ -132,7 +132,7 @@ HydraDB.search(user_phone, query="recurring symbols last 30 days", top_k=50)
 
 ### 6.2 PixVerse text-to-video
 - 文档：https://docs.platform.pixverse.ai/how-to-use-text-to-video-882970m0
-- API key 放 `.env`：`PIXVERSE_API_KEY=sk-fb33fbd10bf1564df2e2802cbc6a608f`
+- API key 放 `.env`：`PIXVERSE_API_KEY=<see local .env>` *(redacted from VCS)*
 - 流程：submit job → poll status → 拿到 video URL
 - **关键参数**（按文档确认）：prompt, aspect_ratio, duration, model_version, negative_prompt
 - 建议 5s, 16:9, 默认模型先跑通再调
