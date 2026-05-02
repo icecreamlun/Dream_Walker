@@ -21,7 +21,7 @@
 
 ---
 
-## 2. The 8 Decisions (Locked)
+## 2. The 12 Decisions (Locked, Round 1)
 
 | # | Decision | Choice | Why |
 |---|---|---|---|
@@ -237,10 +237,7 @@ async (background, 35-65s):
 
 **Goal**: 10 dreams pre-loaded so resonance always returns ≥ 2 results.
 
-**Composition**:
-- 1 soulmate to demo dream (high vector match): "Standing at riverbank, hearing someone call from far side, unable to cross." → pre-generated PixVerse video
-- 1 secondary match (shares "water" keyword): "Breathing underwater, watching a figure float above." → pre-generated PixVerse video
-- 8 distractors (PDF §10 #2-#6, #8-#10, English-translated)
+**Composition**: 1 soulmate (top-1 match, with video) + 1 secondary (top-2 match, text-only) + 8 distractors.
 
 **Phone numbers**: `+15550000001` through `+15550000010`. Masked display: `+1***0001`.
 
@@ -248,10 +245,44 @@ async (background, 35-65s):
 - 8 dreams: `now - random.uniform(2, 20) hours` (in 24h window)
 - 2 dreams: `now - random.uniform(2, 5) days` (fallback pool)
 
-**Demo dream pitch text** (locked, do not change):
+**Demo dream pitch text** (locked, used in pitch verbatim):
 > "I dreamt I was by a river. Someone in white was calling me from the other side, but I couldn't cross."
 
-This text must produce a vector that's nearest-neighbor to the soulmate seed.
+### 8.1 Soulmate Text (concrete, locked — Round 2 #1)
+
+```yaml
+soulmate_1:
+  user_phone: "+15550000001"      # display: +1***0001
+  raw_text: "I was on the wrong side of a wide river. Heard my name. Couldn't reach."
+  summary: "Standing at riverbank, hearing someone call from the far side, unable to cross"
+  key_imagery: [river, water, calling, separation, reaching, name]
+  emotions: [longing, helpless]
+  gua_name: "未济"  # Wei Ji — things unfinished
+  created_at: now - 6h           # in 24h window
+  pre_generated_video: true       # Person B at 10:30-11:00
+  shared_with_demo: [river, water, calling, separation]  # 4 overlapping → ensures top-1
+
+soulmate_2:
+  user_phone: "+15550000007"      # display: +1***0007
+  raw_text: "I was underwater but I could breathe. Someone was floating above me, watching."
+  summary: "Breathing underwater, watching a figure float silently above the surface"
+  key_imagery: [water, breathing, floating, watching, immersion]
+  emotions: [calm, mystery]
+  gua_name: "坎"  # Kan — water, the abysmal
+  created_at: now - 14h          # in 24h window
+  pre_generated_video: false      # text-only on resonance card
+  shared_with_demo: [water]       # 1 overlap → ensures top-2 but won't crowd top-1
+```
+
+**Distractors** (8 dreams from PDF §10 #2-#6, #8-#10, translated to English by Person B):
+- user_phones: `+15550000002` through `+15550000006`, `+15550000008` through `+15550000010`
+- 6 in 24h window, 2 in 7d window (fallback pool)
+- key_imagery must NOT contain `river`, `calling`, `separation` (avoid crowding soulmate_1)
+- 1-2 may contain `water` (provides realistic vector-space diversity)
+
+### 8.2 Validation (Smoke Test — Round 2 #2)
+
+See Section 15 (Smoke Test). Person B MUST run `scripts/verify_resonance.py` after seeding HydraDB at 11:30. Asserts top-1 == soulmate_1 and top-2 == soulmate_2 by `dream_id`. Fix-or-die window: 11:30 → 14:00.
 
 ---
 
@@ -357,6 +388,198 @@ The 90-second pitch (PDF §14) commits us to these literal claims. Engineering m
 | "Two strangers also dreamt of crossing water last night" | Resonance returns exactly 2 matches; both within 24h or fallback to 7d; both share "water" or "river" key_imagery |
 | "We don't know each other" | masked phone display only |
 | "Photon gives it a voice. HydraDB gives it a memory. PixVerse gives it eyes." | All three deeply integrated, none mocked at demo time |
+
+---
+
+---
+
+## 14. Round-2 Detail Decisions Summary
+
+| # | Detail | Choice | Anchor section |
+|---|---|---|---|
+| R2-1 | Soulmate text + smoke test | A — lock text now, run verification at 11:30 | §8.1, §15 |
+| R2-2 | Demo engineering | B — dual backups (QuickTime/Cloudflare/hotspot/whitelist) | §16 |
+| R2-3 | Logging | B — structlog + `/admin/status/{phone}` | §17.1 |
+| R2-4 | Pre-warming | C — lifespan hook + auto-seed | §17.2 |
+| R2-5 | Hybrid SDK fallback | B — pre-write two pitch versions | §17.4 |
+| R2-6 | Concurrency | A — single worker, no locks needed | §17.3 |
+| R2-7 | On-stage roles | C — A speaks/holds phone, B drives laptop | §17.5 |
+| R2-8 | Backup recording | B — dual-screen 90s, recorded 14:30-14:45 | §17.6 |
+
+---
+
+## 15. Smoke Test (Resonance Validation)
+
+**Owner**: Person B. **When**: After seeding HydraDB (11:30). **Window to fix-or-die**: 11:30 → 14:00.
+
+```python
+# scripts/verify_resonance.py
+import asyncio
+from memory import get_store
+from shared.embedding import embed, build_embedding_input
+from backend.gmi_client import extract_structured
+
+DEMO_TEXT = "I dreamt I was by a river. Someone in white was calling me from the other side, but I couldn't cross."
+EXPECTED_TOP_1 = "soulmate_1"   # use the actual dream_id assigned at seed time
+EXPECTED_TOP_2 = "soulmate_2"
+
+async def main():
+    structured = await extract_structured([DEMO_TEXT])
+    text = build_embedding_input(structured.summary, structured.key_imagery)
+    vec = embed(text)
+    results = get_store().find_resonance(vec, exclude_user="+1demo_user", k=2)
+
+    print(f"top-1: {results[0].dream_id}  cosine={results[0].similarity:.3f}")
+    print(f"top-2: {results[1].dream_id}  cosine={results[1].similarity:.3f}")
+
+    assert results[0].dream_id == EXPECTED_TOP_1, "❌ top-1 wrong"
+    assert results[1].dream_id == EXPECTED_TOP_2, "❌ top-2 wrong"
+    print("✅ Resonance smoke test passed")
+
+asyncio.run(main())
+```
+
+**On failure**: (1) tighten soulmate_1 text by adding more imagery overlap; (2) loosen distractor text to reduce competition.
+
+---
+
+## 16. Demo Engineering (Hardware / Network / Photon)
+
+| Layer | Primary | Backup |
+|---|---|---|
+| **Screen mirror** | QuickTime + Lightning (no latency, no network needed) | iPhone Mirror (macOS Sequoia+) or AirPlay |
+| **Public tunnel** | Cloudflare Tunnel (`cloudflared tunnel --url http://localhost:8000`) | ngrok free |
+| **Network** | Venue WiFi | iPhone personal hotspot (5G/4G) |
+| **Photon number** | Speaker's iPhone (whitelisted by 11:00) | Backup iPhone (also whitelisted) |
+
+**Rehearsal checklist** (Person A, 14:30-15:00):
+- [ ] QuickTime mirror → big screen
+- [ ] Cloudflare Tunnel up + Photon webhook URL updated
+- [ ] WiFi speedtest > 10 Mbps
+- [ ] Switch Mac to hotspot, run end-to-end
+- [ ] Speaker's phone sends demo dream → receive link → click → see video
+
+---
+
+## 17. Implementation Notes (Round 2)
+
+### 17.1 Logging & Observability
+
+**Library**: stdlib `logging` (no new deps). Plus a tiny in-memory `pipeline_state` dict for per-phone status.
+
+```python
+# backend/observability.py
+import logging
+from datetime import datetime, timezone
+
+logging.basicConfig(level=logging.INFO,
+    format='%(asctime)s [%(levelname)s] %(name)s: %(message)s')
+log = logging.getLogger("dream")
+
+pipeline_state: dict[str, dict] = {}
+
+def update_state(phone: str, step: str, **extra):
+    pipeline_state[phone] = {
+        "step": step,
+        "ts": datetime.now(timezone.utc).isoformat(),
+        **extra,
+    }
+    log.info(f"phone={phone} step={step} {extra}")
+```
+
+```python
+# backend/main.py — admin endpoint
+@app.get("/admin/status/{phone}")
+def get_status(phone: str):
+    return pipeline_state.get(phone, {"step": "no active pipeline"})
+```
+
+**Pipeline call sites**: `update_state(phone, "llm_extract_started")`, `"llm_extract_done"`, `"pixverse_submitted"`, `"pixverse_polling"`, `"hydra_inserted"`, `"done"`.
+
+**On-stage debug**: Open `https://<tunnel>/admin/status/+1xxx` → see what step the pipeline is on within 30s.
+
+### 17.2 Pre-warming Strategy
+
+**Use FastAPI lifespan** (replaces deprecated startup event):
+
+```python
+# backend/main.py
+@asynccontextmanager
+async def lifespan(app: FastAPI):
+    log.info("warming up...")
+    try:
+        from shared.embedding import embed
+        embed("warmup")  # warms OpenAI client + DNS
+    except Exception as e:
+        log.warning(f"openai warmup failed: {e}")
+
+    try:
+        from backend.gmi_client import warmup
+        await warmup()  # warms GMI client
+    except Exception as e:
+        log.warning(f"gmi warmup failed: {e}")
+
+    # auto-seed for local backend (no-op for hydra; seed.py handles that)
+    from memory import get_store
+    store = get_store()
+    if hasattr(store, "_dreams") and len(store._dreams) == 0:
+        from memory.seed import seed_all
+        await seed_all(store)
+        log.info("local store auto-seeded")
+
+    log.info("warmup complete")
+    yield
+    log.info("shutting down")
+
+app = FastAPI(lifespan=lifespan)
+```
+
+**Effect**: First real SMS doesn't pay 3-5s cold-start latency.
+
+### 17.3 Concurrency
+
+**Assumption**: Demo is sequential (one judge tests at a time). No concurrent webhooks expected.
+
+**Run config**: `uvicorn backend.main:app --workers 1` (default). Document this in README.
+
+**Why no locks**: Python dict assignment in single-worker is GIL-atomic. Adding `asyncio.Lock` is over-engineering for this risk profile.
+
+### 17.4 Hybrid Pitch Fallback (Two Pre-written Versions)
+
+Decided post-workshop (11:00) based on whether HydraDB SDK supports keyword/text filter.
+
+**Version A (SDK supports hybrid)**:
+> "We use HydraDB's hybrid search — vector for the *feeling* of the dream, keyword filter for *exact symbols*. That's how we found these strangers."
+
+**Version B (SDK only supports vector + metadata equality)**:
+> "We use HydraDB's vector search with metadata filtering — semantic similarity for the dream's essence, metadata for time and privacy. That's how we found these strangers from last night."
+
+Both are "in-the-weeds". Speaker chooses by 11:30 and updates pitch card.
+
+### 17.5 On-Stage Roles
+
+| Time | Person A (speaker + phone) | Person B (laptop + screen) |
+|---|---|---|
+| 0-10s | Scene-set narration | Switch to iPhone mirror |
+| 10-30s | Send SMS live | Watch webhook trigger |
+| 30-50s | Read out agent's followup | Prepare to click link |
+| 50-75s | Click link, "let me show you" | Switch screen to Mac browser |
+| 75-90s | Resonance hook + sponsor logos | Stay silent |
+
+**Backup roles**: If A's phone network dies, B hands over backup phone (also whitelisted). If screen switch fails, A reads resonance content aloud — no visual fallback.
+
+### 17.6 Backup Recording
+
+**When**: 14:30-14:45. **Owner**: A acts, B records and edits.
+
+**What to record** (one take, can post-edit):
+1. iPhone screen recording (QuickTime → New Movie Recording → select iPhone): SMS in/out, link tap.
+2. Mac screen recording (QuickTime → Screen Recording): browser loads dream page, video plays, scroll to resonance.
+3. Audio: A reads the full 90s pitch script.
+
+**Post-edit** (Person B, 14:45-15:00): Split-screen iPhone+Mac, pitch audio as voiceover. Output 1080p mp4. Save to Desktop AND iCloud.
+
+**Trigger**: If anything during live demo stalls > 5s, A says "let me show you the recording" and B switches to backup video.
 
 ---
 
