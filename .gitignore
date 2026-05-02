@@ -1,8 +1,4 @@
 .env
-.venv/
-venv/
-__pycache__/
-*.pyc
 .DS_Store
 node_modules/
 dist/
@@ -10,4 +6,5 @@ dist/
 *.log
 .idea/
 .vscode/
+data/
 seed_videos/
