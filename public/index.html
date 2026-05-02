@@ -1,0 +1,464 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1" />
+<title>Dream Walker</title>
+<style>
+  :root {
+    --bg: #0a0810;
+    --bg-2: #14101e;
+    --fg: #f3eee5;
+    --muted: #8a8278;
+    --accent: #c8b48a;
+    --user: #2a1f3d;
+    --bot: #1a1426;
+  }
+  * { box-sizing: border-box; }
+  html, body { height: 100%; margin: 0; }
+  body {
+    font-family: -apple-system, BlinkMacSystemFont, "SF Pro Display", "Helvetica Neue", system-ui, sans-serif;
+    background: radial-gradient(ellipse at top, #1d162a 0%, var(--bg) 55%);
+    color: var(--fg);
+    overflow-x: hidden;
+  }
+  .wrap {
+    max-width: 760px;
+    margin: 0 auto;
+    padding: 28px 18px 40px;
+    display: flex;
+    flex-direction: column;
+    min-height: 100vh;
+  }
+  header {
+    text-align: center;
+    margin-bottom: 18px;
+  }
+  .moon { font-size: 40px; line-height: 1; }
+  h1 {
+    font-weight: 300;
+    letter-spacing: 0.18em;
+    font-size: 18px;
+    margin: 8px 0 4px;
+    text-transform: uppercase;
+  }
+  .tagline { color: var(--muted); font-size: 12px; letter-spacing: 0.06em; }
+
+  .gallery-wrap {
+    margin: 4px 0 18px;
+  }
+  .gallery-label {
+    color: var(--muted);
+    font-size: 10px;
+    letter-spacing: 0.22em;
+    text-transform: uppercase;
+    padding: 0 4px 8px;
+    display: flex;
+    justify-content: space-between;
+    align-items: baseline;
+  }
+  .gallery-label .count { color: var(--accent); }
+  .gallery {
+    display: flex;
+    gap: 12px;
+    overflow-x: auto;
+    overflow-y: hidden;
+    scroll-snap-type: x mandatory;
+    padding: 4px 4px 12px;
+    -webkit-overflow-scrolling: touch;
+  }
+  .gallery::-webkit-scrollbar { height: 6px; }
+  .gallery::-webkit-scrollbar-thumb { background: #2d2440; border-radius: 3px; }
+  .card {
+    flex: 0 0 200px;
+    aspect-ratio: 16/9;
+    border-radius: 12px;
+    overflow: hidden;
+    position: relative;
+    background: var(--bg-2);
+    text-decoration: none;
+    color: inherit;
+    scroll-snap-align: start;
+    border: 1px solid #2d2440;
+    transition: transform 0.18s, border-color 0.18s, box-shadow 0.18s;
+  }
+  .card:hover {
+    transform: translateY(-2px);
+    border-color: var(--accent);
+    box-shadow: 0 8px 24px -8px rgba(200,180,138,0.3);
+  }
+  .card-thumb {
+    width: 100%;
+    height: 100%;
+    background: linear-gradient(135deg, #1a1426, #2a1f3d);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: var(--muted);
+    font-size: 11px;
+  }
+  .card-thumb img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    display: block;
+  }
+  .card-overlay {
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(to top, rgba(10,8,16,0.92) 0%, rgba(10,8,16,0.4) 50%, transparent 100%);
+    display: flex;
+    flex-direction: column;
+    justify-content: flex-end;
+    padding: 10px 12px;
+  }
+  .card-text {
+    font-size: 12px;
+    line-height: 1.35;
+    color: var(--fg);
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+  }
+  .card-pill {
+    position: absolute;
+    top: 8px;
+    left: 8px;
+    padding: 3px 8px;
+    border-radius: 999px;
+    font-size: 9px;
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+    font-weight: 600;
+    backdrop-filter: blur(8px);
+    background: rgba(0,0,0,0.5);
+  }
+  .card.status-ready .card-pill { color: #c8b48a; }
+  .card.status-generating .card-pill,
+  .card.status-queued .card-pill { color: #8a8278; animation: pulse 2s ease-in-out infinite; }
+  .card.status-failed .card-pill { color: #e88; }
+  @keyframes pulse { 50% { opacity: 0.5; } }
+
+  .chat {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    padding: 16px 4px 110px;
+    overflow-y: auto;
+  }
+  .msg {
+    max-width: 82%;
+    padding: 12px 16px;
+    border-radius: 18px;
+    line-height: 1.5;
+    font-size: 15px;
+    white-space: pre-wrap;
+    word-wrap: break-word;
+  }
+  .msg.user {
+    background: var(--user);
+    align-self: flex-end;
+    border-bottom-right-radius: 4px;
+  }
+  .msg.assistant {
+    background: var(--bot);
+    align-self: flex-start;
+    border-bottom-left-radius: 4px;
+    border-left: 2px solid var(--accent);
+  }
+  .msg.assistant a { color: var(--accent); }
+  .msg .time { font-size: 10px; color: var(--muted); display: block; margin-top: 6px; letter-spacing: 0.04em; }
+  .msg.thinking {
+    color: var(--muted);
+    font-style: italic;
+    background: transparent;
+    border: 1px dashed #3a2f4d;
+  }
+
+  .empty {
+    text-align: center;
+    color: var(--muted);
+    font-size: 14px;
+    padding: 40px 20px;
+    line-height: 1.7;
+  }
+  .empty .hex { font-size: 38px; color: var(--accent); letter-spacing: 0.4em; margin-bottom: 10px; }
+  .empty .prompt-suggestions {
+    margin-top: 22px;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    max-width: 340px;
+    margin-left: auto;
+    margin-right: auto;
+  }
+  .empty .pill {
+    padding: 10px 16px;
+    border: 1px solid #2d2440;
+    border-radius: 999px;
+    color: var(--fg);
+    font-size: 13px;
+    cursor: pointer;
+    transition: all 0.2s;
+    background: rgba(255,255,255,0.02);
+  }
+  .empty .pill:hover { border-color: var(--accent); background: rgba(200,180,138,0.08); }
+
+  .composer {
+    position: fixed;
+    bottom: 0; left: 0; right: 0;
+    padding: 14px 18px 24px;
+    background: linear-gradient(to top, var(--bg) 70%, transparent);
+  }
+  .composer-inner {
+    max-width: 760px;
+    margin: 0 auto;
+    display: flex;
+    gap: 10px;
+    align-items: flex-end;
+  }
+  .composer textarea {
+    flex: 1;
+    background: var(--bg-2);
+    color: var(--fg);
+    border: 1px solid #2d2440;
+    border-radius: 22px;
+    padding: 12px 18px;
+    font: inherit;
+    font-size: 15px;
+    resize: none;
+    min-height: 48px;
+    max-height: 160px;
+    outline: none;
+  }
+  .composer textarea:focus { border-color: var(--accent); }
+  .composer button {
+    background: var(--accent);
+    color: #1a1426;
+    border: none;
+    border-radius: 50%;
+    width: 48px;
+    height: 48px;
+    font-size: 22px;
+    cursor: pointer;
+    flex-shrink: 0;
+    transition: opacity 0.2s;
+  }
+  .composer button:disabled { opacity: 0.4; cursor: not-allowed; }
+
+  footer {
+    text-align: center;
+    color: var(--muted);
+    font-size: 10px;
+    letter-spacing: 0.18em;
+    text-transform: uppercase;
+    margin-top: 12px;
+  }
+</style>
+</head>
+<body>
+
+<div class="wrap">
+  <header>
+    <div class="moon">🌙</div>
+    <h1>Dream Walker</h1>
+    <div class="tagline">tell me a dream · ask a question · listen for echoes</div>
+  </header>
+
+  <div class="gallery-wrap" id="gallery-wrap" style="display:none">
+    <div class="gallery-label">
+      <span>archive</span>
+      <span><span class="count" id="gallery-count">0</span> dreams</span>
+    </div>
+    <div class="gallery" id="gallery"></div>
+  </div>
+
+  <div class="chat" id="chat"></div>
+</div>
+
+<div class="composer">
+  <div class="composer-inner">
+    <textarea id="input" placeholder="I dreamt that…   /   what did the river mean?" rows="1"></textarea>
+    <button id="send" title="send">↑</button>
+  </div>
+  <footer>Photon · GMI · PixVerse · HydraDB</footer>
+</div>
+
+<script>
+const STORAGE_KEY = "dream-walker-uid";
+let uid = localStorage.getItem(STORAGE_KEY);
+if (!uid) {
+  uid = "web:" + crypto.randomUUID();
+  localStorage.setItem(STORAGE_KEY, uid);
+}
+
+const chat = document.getElementById("chat");
+const input = document.getElementById("input");
+const sendBtn = document.getElementById("send");
+
+function fmtTime(iso) {
+  const d = new Date(iso);
+  return d.toLocaleTimeString([], { hour: "numeric", minute: "2-digit" });
+}
+
+function escape(s) {
+  return s.replace(/[&<>"]/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c]));
+}
+
+function linkify(s) {
+  return escape(s).replace(/(https?:\/\/[^\s]+)/g, '<a href="$1" target="_blank" rel="noopener">$1</a>');
+}
+
+function renderMessage(role, content, ts) {
+  const div = document.createElement("div");
+  div.className = `msg ${role}`;
+  div.innerHTML = linkify(content);
+  if (ts) {
+    const t = document.createElement("span");
+    t.className = "time";
+    t.textContent = fmtTime(ts);
+    div.appendChild(t);
+  }
+  chat.appendChild(div);
+  div.scrollIntoView({ behavior: "smooth", block: "end" });
+  return div;
+}
+
+function renderEmpty() {
+  chat.innerHTML = `
+    <div class="empty">
+      <div class="hex">☰ ☷ ☵ ☲ ☳ ☴ ☶ ☱</div>
+      <div>tell me a dream you had — i'll paint it<br>or ask about a dream you've already shared</div>
+      <div class="prompt-suggestions">
+        <div class="pill" data-q="I dreamt I was walking through a glass forest where every leaf was a tiny clock">a glass forest</div>
+        <div class="pill" data-q="What does it mean when I keep dreaming about water?">recurring water</div>
+        <div class="pill" data-q="What dreams have I shared so far?">show my archive</div>
+      </div>
+    </div>
+  `;
+  chat.querySelectorAll(".pill").forEach((p) => {
+    p.addEventListener("click", () => {
+      input.value = p.dataset.q;
+      input.focus();
+      autosize();
+    });
+  });
+}
+
+async function loadHistory() {
+  try {
+    const res = await fetch("/conversation/" + encodeURIComponent(uid));
+    const conv = await res.json();
+    if (!conv.messages?.length) {
+      renderEmpty();
+      return;
+    }
+    chat.innerHTML = "";
+    for (const m of conv.messages) {
+      renderMessage(m.role, m.content, m.timestamp);
+    }
+  } catch (e) {
+    console.error(e);
+    renderEmpty();
+  }
+}
+
+function autosize() {
+  input.style.height = "auto";
+  input.style.height = Math.min(input.scrollHeight, 160) + "px";
+}
+input.addEventListener("input", autosize);
+
+async function send() {
+  const text = input.value.trim();
+  if (!text) return;
+  input.value = "";
+  autosize();
+  sendBtn.disabled = true;
+
+  // Drop the empty placeholder if it's there
+  if (chat.querySelector(".empty")) chat.innerHTML = "";
+
+  renderMessage("user", text, new Date().toISOString());
+
+  const thinking = document.createElement("div");
+  thinking.className = "msg thinking";
+  thinking.textContent = "consulting the bones…";
+  chat.appendChild(thinking);
+  thinking.scrollIntoView({ behavior: "smooth", block: "end" });
+
+  try {
+    const res = await fetch("/chat", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ user_id: uid, text }),
+    });
+    const data = await res.json();
+    thinking.remove();
+    if (data.error) {
+      renderMessage("assistant", "⚠ " + data.error, new Date().toISOString());
+    } else {
+      renderMessage("assistant", data.reply, new Date().toISOString());
+    }
+  } catch (e) {
+    thinking.remove();
+    renderMessage("assistant", "⚠ network error: " + e.message, new Date().toISOString());
+  } finally {
+    sendBtn.disabled = false;
+    input.focus();
+  }
+}
+
+sendBtn.addEventListener("click", send);
+input.addEventListener("keydown", (e) => {
+  if (e.key === "Enter" && !e.shiftKey) {
+    e.preventDefault();
+    send();
+  }
+});
+
+async function loadGallery() {
+  try {
+    const r = await fetch("/dreams.json");
+    const dreams = await r.json();
+    const wrap = document.getElementById("gallery-wrap");
+    const gallery = document.getElementById("gallery");
+    const countEl = document.getElementById("gallery-count");
+    if (!dreams.length) {
+      wrap.style.display = "none";
+      return;
+    }
+    wrap.style.display = "";
+    countEl.textContent = dreams.length;
+    gallery.innerHTML = dreams
+      .map((d) => {
+        const thumb = d.thumbnail_url
+          ? `<img src="${escape(d.thumbnail_url)}" alt="">`
+          : `<div>painting…</div>`;
+        const label = d.status === "ready" ? "● ready"
+          : d.status === "failed" ? "● failed"
+          : "○ painting";
+        return `<a class="card status-${escape(d.status)}" href="/dream/${escape(d.dream_id)}">
+          <div class="card-thumb">${thumb}</div>
+          <div class="card-pill">${label}</div>
+          <div class="card-overlay">
+            <div class="card-text">${escape(d.raw_text.slice(0, 100))}${d.raw_text.length > 100 ? "…" : ""}</div>
+          </div>
+        </a>`;
+      })
+      .join("");
+  } catch (e) {
+    console.error("gallery load failed:", e);
+  }
+}
+
+loadGallery();
+loadHistory();
+input.focus();
+// Refresh the gallery periodically so newly-finished videos appear without a manual reload.
+setInterval(loadGallery, 8000);
+</script>
+</body>
+</html>

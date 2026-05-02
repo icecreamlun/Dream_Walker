@@ -1,12 +1,23 @@
 import express from "express";
+import { randomUUID } from "node:crypto";
 import { readFile } from "node:fs/promises";
+import { chatWithAgent } from "./chat.js";
+import { appendMessage, getConversation } from "./conversation.js";
 import { env } from "./env.js";
-import { getDream, listDreams } from "./store.js";
+import { generateVideo } from "./pixverse.js";
+import { dreamPrompt } from "./prompt.js";
+import { getDream, listDreams, saveDream, updateDream, type Dream } from "./store.js";
 
-let template: string | null = null;
-async function getTemplate(): Promise<string> {
-  if (!template) template = await readFile("public/dream.html", "utf8");
-  return template;
+let dreamTpl: string | null = null;
+async function getDreamTemplate(): Promise<string> {
+  if (!dreamTpl) dreamTpl = await readFile("public/dream.html", "utf8");
+  return dreamTpl;
+}
+
+// Re-read on every request — public/index.html changes during the hackathon and
+// we want hot-reload without restarting the server.
+async function getHomeTemplate(): Promise<string> {
+  return readFile("public/index.html", "utf8");
 }
 
 function escape(s: string): string {
@@ -17,8 +28,36 @@ function escape(s: string): string {
     .replace(/"/g, "&quot;");
 }
 
+function dreamUrl(dreamId: string): string {
+  return `${env.publicUrl}/dream/${dreamId}`;
+}
+
+// Background video generation for web-originated dreams.
+async function generateInBackground(dreamId: string, prompt: string) {
+  await updateDream(dreamId, { status: "generating" });
+  try {
+    const { requestId, url, thumbnail } = await generateVideo(prompt, {
+      aspectRatio: "16:9",
+      duration: 5,
+      quality: "540p",
+    });
+    await updateDream(dreamId, {
+      status: "ready",
+      request_id: requestId,
+      video_url: url,
+      thumbnail_url: thumbnail,
+    });
+    console.log(`[${dreamId}] ready: ${url}`);
+  } catch (e) {
+    const msg = (e as Error).message;
+    await updateDream(dreamId, { status: "failed", error: msg });
+    console.error(`[${dreamId}] generate failed:`, msg);
+  }
+}
+
 export function createServer() {
   const app = express();
+  app.use(express.json({ limit: "1mb" }));
 
   app.get("/healthz", (_req, res) => res.json({ ok: true }));
 
@@ -26,9 +65,64 @@ export function createServer() {
     res.json(await listDreams());
   });
 
+  app.get("/conversation/:userId", async (req, res) => {
+    const conv = await getConversation(req.params.userId);
+    res.json(conv);
+  });
+
+  app.post("/chat", async (req, res) => {
+    const { user_id, text } = req.body ?? {};
+    if (typeof user_id !== "string" || typeof text !== "string" || !text.trim()) {
+      res.status(400).json({ error: "user_id and text required" });
+      return;
+    }
+    const userId = user_id.startsWith("web:") ? user_id : `web:${user_id}`;
+
+    const conv = await appendMessage(userId, { role: "user", content: text, channel: "web" });
+
+    let reply: string;
+    let intent: "new_dream" | "chat" = "chat";
+    try {
+      const result = await chatWithAgent(userId, conv.messages.slice(0, -1), text);
+      reply = result.reply;
+      intent = result.intent;
+    } catch (e) {
+      console.error("chat agent failed:", (e as Error).message);
+      reply = "🌙 something fogged my reading. try again in a moment?";
+    }
+
+    let dreamId: string | undefined;
+    if (intent === "new_dream") {
+      dreamId = randomUUID();
+      const prompt = dreamPrompt(text);
+      const dream: Dream = {
+        dream_id: dreamId,
+        user_phone: userId,
+        created_at: new Date().toISOString(),
+        raw_text: text,
+        prompt,
+        status: "queued",
+      };
+      await saveDream(dream);
+      reply = `${reply}\n\n🌙 Painting it now → ${dreamUrl(dreamId)}`;
+      generateInBackground(dreamId, prompt).catch((e) =>
+        console.error("bg gen crashed:", e),
+      );
+    }
+
+    await appendMessage(userId, {
+      role: "assistant",
+      content: reply,
+      channel: "web",
+      dream_id: dreamId,
+    });
+
+    res.json({ reply, intent, dream_id: dreamId });
+  });
+
   app.get("/dream/:id", async (req, res) => {
     const d = await getDream(req.params.id);
-    const tpl = await getTemplate();
+    const tpl = await getDreamTemplate();
     if (!d) {
       res.status(404).send(
         tpl
@@ -69,17 +163,8 @@ export function createServer() {
   });
 
   app.get("/", async (_req, res) => {
-    const dreams = await listDreams();
-    res.send(`<!doctype html><meta charset=utf-8><title>Dream Walker</title>
-<style>body{font-family:system-ui;background:#0c0a14;color:#f3eee5;padding:32px;max-width:720px;margin:auto}a{color:#c8b48a;text-decoration:none}h1{font-weight:400}li{padding:8px 0;border-bottom:1px solid #221a30}small{color:#a8a094}</style>
-<h1>🌙 Dream Walker</h1>
-<p>${dreams.length} dream${dreams.length === 1 ? "" : "s"} archived.</p>
-<ul>${dreams
-      .map(
-        (d) =>
-          `<li><a href="/dream/${d.dream_id}">${escape(d.raw_text.slice(0, 80))}${d.raw_text.length > 80 ? "…" : ""}</a><br><small>${new Date(d.created_at).toLocaleString()} · ${d.status}${d.user_phone ? " · " + escape(d.user_phone) : ""}</small></li>`,
-      )
-      .join("")}</ul>`);
+    const tpl = await getHomeTemplate();
+    res.send(tpl);
   });
 
   return app;
