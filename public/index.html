@@ -3,287 +3,340 @@
 <head>
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width,initial-scale=1" />
-<title>Dream Walker</title>
+<title>Dream Walker — A Ledger of Nocturnal Images</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=EB+Garamond:ital,wght@0,400;0,500;1,400;1,500&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
 <style>
   :root {
-    --bg: #0a0810;
-    --bg-2: #14101e;
-    --fg: #f3eee5;
-    --muted: #8a8278;
-    --accent: #c8b48a;
-    --user: #2a1f3d;
-    --bot: #1a1426;
+    --paper: #16110b;
+    --paper-2: #1d1610;
+    --ink: #e8d8b8;
+    --ink-soft: #b3a487;
+    --ink-faint: #6b614b;
+    --rule: #322a1d;
+    --brass: #c79a4a;
+    --brass-deep: #8a6920;
+    --blood: #a04a36;
+    --serif: "EB Garamond", "Iowan Old Style", Georgia, serif;
+    --mono: "IBM Plex Mono", ui-monospace, "SF Mono", Menlo, monospace;
   }
   * { box-sizing: border-box; }
   html, body { height: 100%; margin: 0; }
   body {
-    font-family: -apple-system, BlinkMacSystemFont, "SF Pro Display", "Helvetica Neue", system-ui, sans-serif;
-    background: radial-gradient(ellipse at top, #1d162a 0%, var(--bg) 55%);
-    color: var(--fg);
-    overflow-x: hidden;
+    font-family: var(--serif);
+    font-size: 17px;
+    line-height: 1.55;
+    color: var(--ink);
+    background: var(--paper);
+    background-image:
+      radial-gradient(ellipse 60% 40% at 50% -10%, rgba(199,154,74,0.07), transparent 70%),
+      radial-gradient(ellipse 100% 50% at 50% 110%, rgba(160,74,54,0.06), transparent 70%);
+    -webkit-font-smoothing: antialiased;
   }
-  .wrap {
-    max-width: 760px;
-    margin: 0 auto;
-    padding: 28px 18px 40px;
-    display: flex;
-    flex-direction: column;
-    min-height: 100vh;
-  }
-  header {
-    text-align: center;
-    margin-bottom: 18px;
-  }
-  .moon { font-size: 40px; line-height: 1; }
-  h1 {
-    font-weight: 300;
-    letter-spacing: 0.18em;
-    font-size: 18px;
-    margin: 8px 0 4px;
-    text-transform: uppercase;
-  }
-  .tagline { color: var(--muted); font-size: 12px; letter-spacing: 0.06em; }
 
-  .gallery-wrap {
-    margin: 4px 0 18px;
+  .page {
+    max-width: 680px;
+    margin: 0 auto;
+    padding: 56px 28px 200px;
   }
-  .gallery-label {
-    color: var(--muted);
-    font-size: 10px;
-    letter-spacing: 0.22em;
+
+  /* ── masthead ───────────────────────────────── */
+  .mast {
+    display: grid;
+    grid-template-columns: 1fr auto;
+    align-items: end;
+    gap: 24px;
+    padding-bottom: 14px;
+    border-bottom: 1px solid var(--rule);
+  }
+  .mast h1 {
+    margin: 0;
+    font-weight: 500;
+    font-size: 38px;
+    letter-spacing: 0.02em;
+    line-height: 1;
+    font-style: italic;
+  }
+  .mast .sub {
+    color: var(--ink-soft);
+    font-size: 15px;
+    margin-top: 4px;
+    font-style: italic;
+  }
+  .mast .meta {
+    text-align: right;
+    font-family: var(--mono);
+    font-size: 11px;
+    letter-spacing: 0.08em;
     text-transform: uppercase;
-    padding: 0 4px 8px;
-    display: flex;
-    justify-content: space-between;
-    align-items: baseline;
+    color: var(--ink-faint);
+    line-height: 1.6;
   }
-  .gallery-label .count { color: var(--accent); }
-  .gallery {
-    display: flex;
-    gap: 12px;
-    overflow-x: auto;
-    overflow-y: hidden;
-    scroll-snap-type: x mandatory;
-    padding: 4px 4px 12px;
-    -webkit-overflow-scrolling: touch;
-  }
-  .gallery::-webkit-scrollbar { height: 6px; }
-  .gallery::-webkit-scrollbar-thumb { background: #2d2440; border-radius: 3px; }
-  .card {
-    flex: 0 0 200px;
-    aspect-ratio: 16/9;
-    border-radius: 12px;
-    overflow: hidden;
-    position: relative;
-    background: var(--bg-2);
-    text-decoration: none;
-    color: inherit;
-    scroll-snap-align: start;
-    border: 1px solid #2d2440;
-    transition: transform 0.18s, border-color 0.18s, box-shadow 0.18s;
-  }
-  .card:hover {
-    transform: translateY(-2px);
-    border-color: var(--accent);
-    box-shadow: 0 8px 24px -8px rgba(200,180,138,0.3);
-  }
-  .card-thumb {
-    width: 100%;
-    height: 100%;
-    background: linear-gradient(135deg, #1a1426, #2a1f3d);
+  .mast .meta b { color: var(--ink-soft); font-weight: 500; }
+
+  /* ── section labels ─────────────────────────── */
+  .lbl {
+    font-family: var(--mono);
+    font-size: 10px;
+    letter-spacing: 0.28em;
+    text-transform: uppercase;
+    color: var(--ink-faint);
+    margin: 44px 0 14px;
     display: flex;
     align-items: center;
-    justify-content: center;
-    color: var(--muted);
-    font-size: 11px;
+    gap: 14px;
   }
-  .card-thumb img {
-    width: 100%;
-    height: 100%;
-    object-fit: cover;
+  .lbl::after {
+    content: "";
+    flex: 1;
+    border-bottom: 1px dotted var(--rule);
+    transform: translateY(-2px);
+  }
+  .lbl .num { color: var(--brass); }
+
+  /* ── archive ledger ─────────────────────────── */
+  .ledger { display: flex; flex-direction: column; gap: 0; }
+  .entry {
+    display: grid;
+    grid-template-columns: 56px 96px 1fr;
+    gap: 18px;
+    padding: 18px 0;
+    border-bottom: 1px dotted var(--rule);
+    text-decoration: none;
+    color: inherit;
+    transition: background 0.15s;
+  }
+  .entry:hover { background: rgba(199,154,74,0.04); }
+  .entry-num {
+    font-family: var(--mono);
+    font-size: 11px;
+    letter-spacing: 0.08em;
+    color: var(--ink-faint);
+    padding-top: 2px;
+  }
+  .entry-thumb {
+    aspect-ratio: 16/10;
+    border-radius: 2px;
+    overflow: hidden;
+    background: var(--paper-2);
+    border: 1px solid var(--rule);
     display: block;
   }
-  .card-overlay {
-    position: absolute;
-    inset: 0;
-    background: linear-gradient(to top, rgba(10,8,16,0.92) 0%, rgba(10,8,16,0.4) 50%, transparent 100%);
-    display: flex;
-    flex-direction: column;
-    justify-content: flex-end;
-    padding: 10px 12px;
+  .entry-thumb img { width: 100%; height: 100%; object-fit: cover; display: block; }
+  .entry-thumb .pending {
+    width: 100%; height: 100%;
+    display: flex; align-items: center; justify-content: center;
+    font-family: var(--mono); font-size: 9px; letter-spacing: 0.18em; text-transform: uppercase;
+    color: var(--ink-faint);
+    animation: breath 2.4s ease-in-out infinite;
   }
-  .card-text {
-    font-size: 12px;
-    line-height: 1.35;
-    color: var(--fg);
+  @keyframes breath { 50% { opacity: 0.4; } }
+  .entry-body { min-width: 0; }
+  .entry-body .text {
+    font-style: italic;
+    color: var(--ink);
+    margin: 0;
     display: -webkit-box;
-    -webkit-line-clamp: 2;
+    -webkit-line-clamp: 3;
     -webkit-box-orient: vertical;
     overflow: hidden;
   }
-  .card-pill {
-    position: absolute;
-    top: 8px;
-    left: 8px;
-    padding: 3px 8px;
-    border-radius: 999px;
-    font-size: 9px;
+  .entry-body .foot {
+    display: flex;
+    gap: 14px;
+    margin-top: 8px;
+    font-family: var(--mono);
+    font-size: 10px;
+    letter-spacing: 0.12em;
     text-transform: uppercase;
-    letter-spacing: 0.1em;
-    font-weight: 600;
-    backdrop-filter: blur(8px);
-    background: rgba(0,0,0,0.5);
+    color: var(--ink-faint);
   }
-  .card.status-ready .card-pill { color: #c8b48a; }
-  .card.status-generating .card-pill,
-  .card.status-queued .card-pill { color: #8a8278; animation: pulse 2s ease-in-out infinite; }
-  .card.status-failed .card-pill { color: #e88; }
-  @keyframes pulse { 50% { opacity: 0.5; } }
+  .entry-body .foot .status-ready { color: var(--brass); }
+  .entry-body .foot .status-failed { color: var(--blood); }
 
-  .chat {
-    flex: 1;
+  /* ── consult / chat ─────────────────────────── */
+  .scroll {
     display: flex;
     flex-direction: column;
-    gap: 12px;
-    padding: 16px 4px 110px;
-    overflow-y: auto;
+    gap: 22px;
   }
-  .msg {
-    max-width: 82%;
-    padding: 12px 16px;
-    border-radius: 18px;
-    line-height: 1.5;
-    font-size: 15px;
-    white-space: pre-wrap;
-    word-wrap: break-word;
+  .turn { padding: 0; }
+  .turn-meta {
+    font-family: var(--mono);
+    font-size: 9px;
+    letter-spacing: 0.2em;
+    text-transform: uppercase;
+    color: var(--ink-faint);
+    margin-bottom: 6px;
   }
-  .msg.user {
-    background: var(--user);
-    align-self: flex-end;
-    border-bottom-right-radius: 4px;
-  }
-  .msg.assistant {
-    background: var(--bot);
-    align-self: flex-start;
-    border-bottom-left-radius: 4px;
-    border-left: 2px solid var(--accent);
-  }
-  .msg.assistant a { color: var(--accent); }
-  .msg .time { font-size: 10px; color: var(--muted); display: block; margin-top: 6px; letter-spacing: 0.04em; }
-  .msg.thinking {
-    color: var(--muted);
+  .turn.user .turn-meta { color: var(--ink-faint); }
+  .turn.user .body {
     font-style: italic;
-    background: transparent;
-    border: 1px dashed #3a2f4d;
+    color: var(--ink-soft);
+    border-left: 1px solid var(--rule);
+    padding-left: 14px;
+    margin: 0;
+  }
+  .turn.assistant {
+    padding-left: 0;
+  }
+  .turn.assistant .turn-meta { color: var(--brass-deep); }
+  .turn.assistant .body {
+    font-size: 18px;
+    line-height: 1.55;
+    color: var(--ink);
+    margin: 0;
+  }
+  .turn.assistant .body a { color: var(--brass); text-decoration: underline; text-underline-offset: 3px; text-decoration-thickness: 1px; }
+  .turn.thinking .body {
+    font-family: var(--mono);
+    font-size: 11px;
+    letter-spacing: 0.18em;
+    text-transform: uppercase;
+    color: var(--ink-faint);
+    animation: breath 1.6s ease-in-out infinite;
   }
 
   .empty {
-    text-align: center;
-    color: var(--muted);
-    font-size: 14px;
-    padding: 40px 20px;
-    line-height: 1.7;
+    padding: 24px 0;
+    color: var(--ink-soft);
+    font-style: italic;
   }
-  .empty .hex { font-size: 38px; color: var(--accent); letter-spacing: 0.4em; margin-bottom: 10px; }
-  .empty .prompt-suggestions {
-    margin-top: 22px;
-    display: flex;
-    flex-direction: column;
-    gap: 8px;
-    max-width: 340px;
-    margin-left: auto;
-    margin-right: auto;
-  }
-  .empty .pill {
-    padding: 10px 16px;
-    border: 1px solid #2d2440;
-    border-radius: 999px;
-    color: var(--fg);
-    font-size: 13px;
-    cursor: pointer;
-    transition: all 0.2s;
-    background: rgba(255,255,255,0.02);
-  }
-  .empty .pill:hover { border-color: var(--accent); background: rgba(200,180,138,0.08); }
-
-  .composer {
-    position: fixed;
-    bottom: 0; left: 0; right: 0;
-    padding: 14px 18px 24px;
-    background: linear-gradient(to top, var(--bg) 70%, transparent);
-  }
-  .composer-inner {
-    max-width: 760px;
-    margin: 0 auto;
-    display: flex;
-    gap: 10px;
-    align-items: flex-end;
-  }
-  .composer textarea {
-    flex: 1;
-    background: var(--bg-2);
-    color: var(--fg);
-    border: 1px solid #2d2440;
-    border-radius: 22px;
-    padding: 12px 18px;
-    font: inherit;
-    font-size: 15px;
-    resize: none;
-    min-height: 48px;
-    max-height: 160px;
-    outline: none;
-  }
-  .composer textarea:focus { border-color: var(--accent); }
-  .composer button {
-    background: var(--accent);
-    color: #1a1426;
-    border: none;
-    border-radius: 50%;
-    width: 48px;
-    height: 48px;
-    font-size: 22px;
-    cursor: pointer;
-    flex-shrink: 0;
-    transition: opacity 0.2s;
-  }
-  .composer button:disabled { opacity: 0.4; cursor: not-allowed; }
-
-  footer {
-    text-align: center;
-    color: var(--muted);
+  .empty p { margin: 0 0 8px; }
+  .empty .hint {
+    font-family: var(--mono);
     font-size: 10px;
     letter-spacing: 0.18em;
     text-transform: uppercase;
-    margin-top: 12px;
+    color: var(--ink-faint);
+    margin-top: 16px;
+    font-style: normal;
+  }
+
+  /* ── composer ───────────────────────────────── */
+  .composer {
+    position: fixed;
+    bottom: 0; left: 0; right: 0;
+    background: linear-gradient(to top, var(--paper) 60%, transparent);
+    padding: 24px 28px 28px;
+  }
+  .composer-inner {
+    max-width: 680px;
+    margin: 0 auto;
+    display: flex;
+    align-items: flex-end;
+    gap: 14px;
+    border-top: 1px solid var(--rule);
+    padding-top: 18px;
+  }
+  .composer .caret {
+    font-family: var(--mono);
+    color: var(--brass);
+    font-size: 16px;
+    padding: 12px 0;
+    user-select: none;
+  }
+  .composer textarea {
+    flex: 1;
+    background: transparent;
+    color: var(--ink);
+    border: none;
+    font-family: var(--serif);
+    font-size: 17px;
+    line-height: 1.5;
+    resize: none;
+    min-height: 28px;
+    max-height: 180px;
+    padding: 12px 0;
+    outline: none;
+  }
+  .composer textarea::placeholder {
+    color: var(--ink-faint);
+    font-style: italic;
+  }
+  .composer button {
+    background: transparent;
+    color: var(--ink-faint);
+    border: 1px solid var(--rule);
+    border-radius: 2px;
+    padding: 8px 14px;
+    font-family: var(--mono);
+    font-size: 10px;
+    letter-spacing: 0.22em;
+    text-transform: uppercase;
+    cursor: pointer;
+    transition: all 0.15s;
+    align-self: center;
+  }
+  .composer button:hover:not(:disabled) {
+    color: var(--brass);
+    border-color: var(--brass);
+  }
+  .composer button:disabled { opacity: 0.3; cursor: not-allowed; }
+
+  /* ── colophon ───────────────────────────────── */
+  .colophon {
+    margin-top: 80px;
+    padding-top: 18px;
+    border-top: 1px solid var(--rule);
+    font-family: var(--mono);
+    font-size: 9px;
+    letter-spacing: 0.22em;
+    text-transform: uppercase;
+    color: var(--ink-faint);
+    display: flex;
+    justify-content: space-between;
+    flex-wrap: wrap;
+    gap: 12px;
+  }
+
+  @media (max-width: 540px) {
+    .page { padding: 36px 22px 220px; }
+    .mast { grid-template-columns: 1fr; gap: 8px; }
+    .mast .meta { text-align: left; }
+    .mast h1 { font-size: 32px; }
+    .entry { grid-template-columns: 40px 1fr; gap: 12px; }
+    .entry-thumb { display: none; }
   }
 </style>
 </head>
 <body>
 
-<div class="wrap">
-  <header>
-    <div class="moon">🌙</div>
-    <h1>Dream Walker</h1>
-    <div class="tagline">tell me a dream · ask a question · listen for echoes</div>
+<div class="page">
+
+  <header class="mast">
+    <div>
+      <h1>Dream Walker</h1>
+      <div class="sub">A ledger of nocturnal images, kept in plain ink.</div>
+    </div>
+    <div class="meta">
+      <div><b>Vol.</b> I</div>
+      <div id="mast-date">—</div>
+      <div id="mast-count">—</div>
+    </div>
   </header>
 
-  <div class="gallery-wrap" id="gallery-wrap" style="display:none">
-    <div class="gallery-label">
-      <span>archive</span>
-      <span><span class="count" id="gallery-count">0</span> dreams</span>
-    </div>
-    <div class="gallery" id="gallery"></div>
+  <div id="ledger-section" style="display:none">
+    <div class="lbl"><span>Archive</span> <span class="num" id="ledger-count"></span></div>
+    <div class="ledger" id="ledger"></div>
   </div>
 
-  <div class="chat" id="chat"></div>
+  <div class="lbl"><span>Consult</span></div>
+  <div class="scroll" id="chat"></div>
+
+  <footer class="colophon">
+    <span>Photon · GMI · PixVerse · HydraDB</span>
+    <span>Build Matcha &amp; Code MMXXVI</span>
+  </footer>
 </div>
 
 <div class="composer">
   <div class="composer-inner">
-    <textarea id="input" placeholder="I dreamt that…   /   what did the river mean?" rows="1"></textarea>
-    <button id="send" title="send">↑</button>
+    <span class="caret">›</span>
+    <textarea id="input" placeholder="Recount a dream, or ask after one already told." rows="1"></textarea>
+    <button id="send" title="send">Send ↵</button>
   </div>
-  <footer>Photon · GMI · PixVerse · HydraDB</footer>
 </div>
 
 <script>
@@ -298,76 +351,107 @@ const chat = document.getElementById("chat");
 const input = document.getElementById("input");
 const sendBtn = document.getElementById("send");
 
-function fmtTime(iso) {
+document.getElementById("mast-date").textContent = new Date().toLocaleDateString("en-US", {
+  month: "short", day: "2-digit", year: "numeric",
+}).toUpperCase();
+
+function fmt(iso) {
   const d = new Date(iso);
   return d.toLocaleTimeString([], { hour: "numeric", minute: "2-digit" });
 }
 
 function escape(s) {
-  return s.replace(/[&<>"]/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c]));
+  return String(s).replace(/[&<>"]/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c]));
 }
 
 function linkify(s) {
   return escape(s).replace(/(https?:\/\/[^\s]+)/g, '<a href="$1" target="_blank" rel="noopener">$1</a>');
 }
 
-function renderMessage(role, content, ts) {
-  const div = document.createElement("div");
-  div.className = `msg ${role}`;
-  div.innerHTML = linkify(content);
-  if (ts) {
-    const t = document.createElement("span");
-    t.className = "time";
-    t.textContent = fmtTime(ts);
-    div.appendChild(t);
-  }
-  chat.appendChild(div);
-  div.scrollIntoView({ behavior: "smooth", block: "end" });
-  return div;
+function pad(n, w) { return String(n).padStart(w, "0"); }
+
+function renderTurn(role, content, ts) {
+  const wrap = document.createElement("article");
+  wrap.className = `turn ${role}`;
+  const meta = document.createElement("div");
+  meta.className = "turn-meta";
+  meta.textContent = role === "user" ? `Querent · ${fmt(ts)}` : `Walker · ${fmt(ts)}`;
+  const body = document.createElement("div");
+  body.className = "body";
+  body.innerHTML = linkify(content);
+  wrap.appendChild(meta);
+  wrap.appendChild(body);
+  chat.appendChild(wrap);
+  wrap.scrollIntoView({ behavior: "smooth", block: "end" });
+  return wrap;
 }
 
 function renderEmpty() {
   chat.innerHTML = `
     <div class="empty">
-      <div class="hex">☰ ☷ ☵ ☲ ☳ ☴ ☶ ☱</div>
-      <div>tell me a dream you had — i'll paint it<br>or ask about a dream you've already shared</div>
-      <div class="prompt-suggestions">
-        <div class="pill" data-q="I dreamt I was walking through a glass forest where every leaf was a tiny clock">a glass forest</div>
-        <div class="pill" data-q="What does it mean when I keep dreaming about water?">recurring water</div>
-        <div class="pill" data-q="What dreams have I shared so far?">show my archive</div>
-      </div>
+      <p>The ledger awaits an entry.</p>
+      <p>Begin with a dream. The Walker will inquire, render, and remember.</p>
+      <div class="hint">— or text +1 415 605 7073 —</div>
     </div>
   `;
-  chat.querySelectorAll(".pill").forEach((p) => {
-    p.addEventListener("click", () => {
-      input.value = p.dataset.q;
-      input.focus();
-      autosize();
-    });
-  });
 }
 
 async function loadHistory() {
   try {
     const res = await fetch("/conversation/" + encodeURIComponent(uid));
     const conv = await res.json();
-    if (!conv.messages?.length) {
-      renderEmpty();
-      return;
-    }
     chat.innerHTML = "";
-    for (const m of conv.messages) {
-      renderMessage(m.role, m.content, m.timestamp);
-    }
-  } catch (e) {
-    console.error(e);
+    if (!conv.messages?.length) { renderEmpty(); return; }
+    for (const m of conv.messages) renderTurn(m.role, m.content, m.timestamp);
+  } catch {
     renderEmpty();
+  }
+}
+
+async function loadLedger() {
+  try {
+    const r = await fetch("/dreams.json");
+    const dreams = await r.json();
+    const section = document.getElementById("ledger-section");
+    const ledger = document.getElementById("ledger");
+    const counter = document.getElementById("ledger-count");
+    document.getElementById("mast-count").textContent =
+      `${dreams.length} ${dreams.length === 1 ? "ENTRY" : "ENTRIES"}`;
+    if (!dreams.length) { section.style.display = "none"; return; }
+    section.style.display = "";
+    counter.textContent = `№ ${pad(dreams.length, 3)}`;
+    // Newest first; number them descending so the latest is the highest entry no.
+    ledger.innerHTML = dreams.map((d, i) => {
+      const n = dreams.length - i;
+      const status = d.status === "ready" ? "ready"
+        : d.status === "failed" ? "failed"
+        : "painting";
+      const thumb = d.thumbnail_url
+        ? `<img src="${escape(d.thumbnail_url)}" alt="">`
+        : `<div class="pending">${escape(status)}</div>`;
+      const date = new Date(d.created_at).toLocaleDateString("en-US", {
+        month: "short", day: "2-digit",
+      }).toUpperCase();
+      return `<a class="entry" href="/dream/${escape(d.dream_id)}">
+        <div class="entry-num">№ ${pad(n, 3)}</div>
+        <div class="entry-thumb">${thumb}</div>
+        <div class="entry-body">
+          <p class="text">${escape(d.raw_text)}</p>
+          <div class="foot">
+            <span>${date}</span>
+            <span class="status-${escape(d.status)}">${escape(status)}</span>
+          </div>
+        </div>
+      </a>`;
+    }).join("");
+  } catch (e) {
+    console.error("ledger load failed", e);
   }
 }
 
 function autosize() {
   input.style.height = "auto";
-  input.style.height = Math.min(input.scrollHeight, 160) + "px";
+  input.style.height = Math.min(input.scrollHeight, 180) + "px";
 }
 input.addEventListener("input", autosize);
 
@@ -378,16 +462,15 @@ async function send() {
   autosize();
   sendBtn.disabled = true;
 
-  // Drop the empty placeholder if it's there
   if (chat.querySelector(".empty")) chat.innerHTML = "";
 
-  renderMessage("user", text, new Date().toISOString());
+  renderTurn("user", text, new Date().toISOString());
 
-  const thinking = document.createElement("div");
-  thinking.className = "msg thinking";
-  thinking.textContent = "consulting the bones…";
-  chat.appendChild(thinking);
-  thinking.scrollIntoView({ behavior: "smooth", block: "end" });
+  const t = document.createElement("article");
+  t.className = "turn thinking";
+  t.innerHTML = `<div class="body">consulting the bones</div>`;
+  chat.appendChild(t);
+  t.scrollIntoView({ behavior: "smooth", block: "end" });
 
   try {
     const res = await fetch("/chat", {
@@ -396,15 +479,13 @@ async function send() {
       body: JSON.stringify({ user_id: uid, text }),
     });
     const data = await res.json();
-    thinking.remove();
-    if (data.error) {
-      renderMessage("assistant", "⚠ " + data.error, new Date().toISOString());
-    } else {
-      renderMessage("assistant", data.reply, new Date().toISOString());
-    }
+    t.remove();
+    renderTurn("assistant", data.reply || data.error || "—", new Date().toISOString());
+    // Refresh ledger so a new dream entry appears immediately.
+    if (data.intent === "new_dream") loadLedger();
   } catch (e) {
-    thinking.remove();
-    renderMessage("assistant", "⚠ network error: " + e.message, new Date().toISOString());
+    t.remove();
+    renderTurn("assistant", "(network silence) " + e.message, new Date().toISOString());
   } finally {
     sendBtn.disabled = false;
     input.focus();
@@ -419,46 +500,10 @@ input.addEventListener("keydown", (e) => {
   }
 });
 
-async function loadGallery() {
-  try {
-    const r = await fetch("/dreams.json");
-    const dreams = await r.json();
-    const wrap = document.getElementById("gallery-wrap");
-    const gallery = document.getElementById("gallery");
-    const countEl = document.getElementById("gallery-count");
-    if (!dreams.length) {
-      wrap.style.display = "none";
-      return;
-    }
-    wrap.style.display = "";
-    countEl.textContent = dreams.length;
-    gallery.innerHTML = dreams
-      .map((d) => {
-        const thumb = d.thumbnail_url
-          ? `<img src="${escape(d.thumbnail_url)}" alt="">`
-          : `<div>painting…</div>`;
-        const label = d.status === "ready" ? "● ready"
-          : d.status === "failed" ? "● failed"
-          : "○ painting";
-        return `<a class="card status-${escape(d.status)}" href="/dream/${escape(d.dream_id)}">
-          <div class="card-thumb">${thumb}</div>
-          <div class="card-pill">${label}</div>
-          <div class="card-overlay">
-            <div class="card-text">${escape(d.raw_text.slice(0, 100))}${d.raw_text.length > 100 ? "…" : ""}</div>
-          </div>
-        </a>`;
-      })
-      .join("");
-  } catch (e) {
-    console.error("gallery load failed:", e);
-  }
-}
-
-loadGallery();
+loadLedger();
 loadHistory();
 input.focus();
-// Refresh the gallery periodically so newly-finished videos appear without a manual reload.
-setInterval(loadGallery, 8000);
+setInterval(loadLedger, 8000);
 </script>
 </body>
 </html>

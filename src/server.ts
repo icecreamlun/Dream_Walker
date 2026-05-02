@@ -8,10 +8,8 @@ import { generateVideo } from "./pixverse.js";
 import { dreamPrompt } from "./prompt.js";
 import { getDream, listDreams, saveDream, updateDream, type Dream } from "./store.js";
 
-let dreamTpl: string | null = null;
 async function getDreamTemplate(): Promise<string> {
-  if (!dreamTpl) dreamTpl = await readFile("public/dream.html", "utf8");
-  return dreamTpl;
+  return readFile("public/dream.html", "utf8");
 }
 
 // Re-read on every request — public/index.html changes during the hackathon and

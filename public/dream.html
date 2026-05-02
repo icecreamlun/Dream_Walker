@@ -3,74 +3,180 @@
 <head>
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width,initial-scale=1" />
-<title>Dream Walker</title>
+<title>{{TITLE}} — Dream Walker</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=EB+Garamond:ital,wght@0,400;0,500;1,400;1,500&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
 <style>
   :root {
-    --bg: #0c0a14;
-    --fg: #f3eee5;
-    --muted: #a8a094;
-    --accent: #c8b48a;
+    --paper: #16110b;
+    --paper-2: #1d1610;
+    --ink: #e8d8b8;
+    --ink-soft: #b3a487;
+    --ink-faint: #6b614b;
+    --rule: #322a1d;
+    --brass: #c79a4a;
+    --brass-deep: #8a6920;
+    --blood: #a04a36;
+    --serif: "EB Garamond", "Iowan Old Style", Georgia, serif;
+    --mono: "IBM Plex Mono", ui-monospace, "SF Mono", Menlo, monospace;
   }
-  * { box-sizing: border-box }
+  * { box-sizing: border-box; }
+  html, body { margin: 0; }
   body {
-    margin: 0;
-    font-family: -apple-system, BlinkMacSystemFont, "SF Pro Display", "Helvetica Neue", system-ui, sans-serif;
-    background: radial-gradient(circle at 30% 10%, #1d162a 0%, var(--bg) 60%);
-    color: var(--fg);
+    font-family: var(--serif);
+    background: var(--paper);
+    background-image:
+      radial-gradient(ellipse 60% 40% at 50% -10%, rgba(199,154,74,0.06), transparent 70%),
+      radial-gradient(ellipse 80% 50% at 50% 110%, rgba(160,74,54,0.05), transparent 70%);
+    color: var(--ink);
+    -webkit-font-smoothing: antialiased;
     min-height: 100vh;
   }
-  main { max-width: 720px; margin: 0 auto; padding: 32px 20px 80px; }
-  header { text-align: center; margin-bottom: 28px; }
-  .moon { font-size: 36px; }
-  h1 { font-weight: 400; letter-spacing: 0.04em; font-size: 22px; margin: 4px 0 0; }
-  .meta { color: var(--muted); font-size: 12px; margin-top: 6px; }
-  .video {
-    width: 100%; aspect-ratio: 16/9; border-radius: 14px; overflow: hidden;
-    background: #000; box-shadow: 0 20px 60px -20px rgba(0,0,0,0.7);
+  .page { max-width: 720px; margin: 0 auto; padding: 56px 28px 80px; }
+
+  .topbar {
+    display: flex;
+    justify-content: space-between;
+    align-items: baseline;
+    padding-bottom: 14px;
+    border-bottom: 1px solid var(--rule);
+    margin-bottom: 32px;
   }
-  .video video { width: 100%; height: 100%; object-fit: cover; }
+  .topbar a {
+    font-family: var(--mono);
+    font-size: 10px;
+    letter-spacing: 0.22em;
+    text-transform: uppercase;
+    color: var(--ink-faint);
+    text-decoration: none;
+  }
+  .topbar a:hover { color: var(--brass); }
+  .topbar .title {
+    font-style: italic;
+    font-size: 14px;
+    color: var(--ink-soft);
+  }
+
+  .hd-meta {
+    font-family: var(--mono);
+    font-size: 10px;
+    letter-spacing: 0.22em;
+    text-transform: uppercase;
+    color: var(--ink-faint);
+    margin-bottom: 10px;
+  }
+  .hd-title {
+    font-style: italic;
+    font-size: 26px;
+    line-height: 1.25;
+    color: var(--ink);
+    margin: 0 0 28px;
+    font-weight: 500;
+  }
+
+  .video, .pending {
+    width: 100%;
+    aspect-ratio: 16/9;
+    border-radius: 3px;
+    overflow: hidden;
+    background: var(--paper-2);
+    border: 1px solid var(--rule);
+  }
+  .video video {
+    width: 100%; height: 100%;
+    object-fit: cover;
+    display: block;
+  }
   .pending {
-    width: 100%; aspect-ratio: 16/9; border-radius: 14px;
-    background: linear-gradient(120deg, #1d162a, #2a1f3d);
-    display: flex; align-items: center; justify-content: center;
-    color: var(--muted); font-size: 14px;
-    animation: pulse 2.4s ease-in-out infinite;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: var(--ink-faint);
+    font-family: var(--mono);
+    font-size: 11px;
+    letter-spacing: 0.22em;
+    text-transform: uppercase;
+    animation: breath 2.4s ease-in-out infinite;
   }
-  @keyframes pulse { 50% { opacity: 0.55 } }
+  @keyframes breath { 50% { opacity: 0.45; } }
+
   .raw {
-    margin-top: 22px; padding: 20px;
-    border-left: 2px solid var(--accent);
-    color: var(--fg); font-style: italic; line-height: 1.55;
-    background: rgba(255,255,255,0.02);
+    margin-top: 32px;
+    padding: 20px 0 0;
+    border-top: 1px dotted var(--rule);
   }
-  .label { color: var(--accent); font-size: 11px; text-transform: uppercase; letter-spacing: 0.18em; margin-bottom: 6px; font-style: normal; }
-  footer { text-align: center; margin-top: 40px; color: var(--muted); font-size: 11px; letter-spacing: 0.08em; }
-  footer .stack { margin-top: 6px; opacity: 0.7; }
-  .err { color: #e88; margin-top: 14px; font-size: 13px; }
+  .label {
+    font-family: var(--mono);
+    font-size: 10px;
+    letter-spacing: 0.28em;
+    text-transform: uppercase;
+    color: var(--ink-faint);
+    margin-bottom: 12px;
+  }
+  .raw-body {
+    font-style: italic;
+    font-size: 19px;
+    line-height: 1.6;
+    color: var(--ink);
+    margin: 0;
+  }
+
+  .err {
+    margin-top: 18px;
+    padding: 12px 14px;
+    border-left: 2px solid var(--blood);
+    color: var(--blood);
+    font-family: var(--mono);
+    font-size: 12px;
+    background: rgba(160,74,54,0.07);
+  }
+
+  .colophon {
+    margin-top: 80px;
+    padding-top: 18px;
+    border-top: 1px solid var(--rule);
+    font-family: var(--mono);
+    font-size: 9px;
+    letter-spacing: 0.22em;
+    text-transform: uppercase;
+    color: var(--ink-faint);
+    display: flex;
+    justify-content: space-between;
+    flex-wrap: wrap;
+    gap: 10px;
+  }
+
+  @media (max-width: 540px) {
+    .page { padding: 36px 22px 60px; }
+    .hd-title { font-size: 22px; }
+  }
 </style>
 </head>
 <body>
-<main>
-  <header>
-    <div class="moon">🌙</div>
-    <h1>{{TITLE}}</h1>
-    <div class="meta">{{META}}</div>
-  </header>
+<div class="page">
+  <div class="topbar">
+    <a href="/">← Ledger</a>
+    <span class="title">Dream Walker</span>
+  </div>
+
+  <div class="hd-meta">{{META}}</div>
+  <h1 class="hd-title">{{TITLE}}</h1>
 
   {{VIDEO_BLOCK}}
 
   <div class="raw">
-    <div class="label">As you told it</div>
-    {{RAW_TEXT}}
+    <div class="label">As told</div>
+    <p class="raw-body">{{RAW_TEXT}}</p>
   </div>
 
   {{ERROR_BLOCK}}
 
-  <footer>
-    Dream Walker
-    <div class="stack">Photon · PixVerse · GMI · HydraDB</div>
+  <footer class="colophon">
+    <span>Photon · GMI · PixVerse · HydraDB</span>
+    <span>Build Matcha &amp; Code MMXXVI</span>
   </footer>
-</main>
+</div>
 {{REFRESH_SCRIPT}}
 </body>
 </html>
