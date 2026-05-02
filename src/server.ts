@@ -1,12 +1,10 @@
 import express from "express";
-import { randomUUID } from "node:crypto";
 import { readFile } from "node:fs/promises";
 import { chatWithAgent } from "./chat.js";
 import { appendMessage, getConversation } from "./conversation.js";
 import { env } from "./env.js";
-import { generateVideo } from "./pixverse.js";
-import { dreamPrompt } from "./prompt.js";
-import { getDream, listDreams, saveDream, updateDream, type Dream } from "./store.js";
+import { renderDream } from "./render-pipeline.js";
+import { getDream, listDreams } from "./store.js";
 
 async function getDreamTemplate(): Promise<string> {
   return readFile("public/dream.html", "utf8");
@@ -28,29 +26,6 @@ function escape(s: string): string {
 
 function dreamUrl(dreamId: string): string {
   return `${env.publicUrl}/dream/${dreamId}`;
-}
-
-// Background video generation for web-originated dreams.
-async function generateInBackground(dreamId: string, prompt: string) {
-  await updateDream(dreamId, { status: "generating" });
-  try {
-    const { requestId, url, thumbnail } = await generateVideo(prompt, {
-      aspectRatio: "16:9",
-      duration: 5,
-      quality: "540p",
-    });
-    await updateDream(dreamId, {
-      status: "ready",
-      request_id: requestId,
-      video_url: url,
-      thumbnail_url: thumbnail,
-    });
-    console.log(`[${dreamId}] ready: ${url}`);
-  } catch (e) {
-    const msg = (e as Error).message;
-    await updateDream(dreamId, { status: "failed", error: msg });
-    console.error(`[${dreamId}] generate failed:`, msg);
-  }
 }
 
 export function createServer() {
@@ -91,21 +66,9 @@ export function createServer() {
 
     let dreamId: string | undefined;
     if (intent === "new_dream") {
-      dreamId = randomUUID();
-      const prompt = dreamPrompt(text);
-      const dream: Dream = {
-        dream_id: dreamId,
-        user_phone: userId,
-        created_at: new Date().toISOString(),
-        raw_text: text,
-        prompt,
-        status: "queued",
-      };
-      await saveDream(dream);
+      // No notify — the web user is already on the page; the dream card auto-refreshes.
+      dreamId = await renderDream({ sender: userId, rawText: text });
       reply = `${reply}\n\n🌙 Painting it now → ${dreamUrl(dreamId)}`;
-      generateInBackground(dreamId, prompt).catch((e) =>
-        console.error("bg gen crashed:", e),
-      );
     }
 
     await appendMessage(userId, {
