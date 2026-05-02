@@ -68,7 +68,7 @@ export async function chatWithAgent(
     { role: "user" as const, content: newUserMessage },
   ];
 
-  const res = await fetch(`${env.gmiLlmBase}/v1/chat/completions`, {
+  const res = await fetch(`${env.gmiLlmBaseUrl}/v1/chat/completions`, {
     method: "POST",
     headers: { Authorization: `Bearer ${env.gmiApiKey}`, "Content-Type": "application/json" },
     body: JSON.stringify({
