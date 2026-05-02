@@ -8,10 +8,14 @@
     "start": "tsx src/index.ts",
     "test:pixverse": "tsx scripts/test-pixverse.ts",
     "test:photon": "tsx scripts/test-photon.ts",
+    "test:hydra": "tsx scripts/test-hydra.ts",
     "register": "tsx scripts/register-user.ts",
-    "demo": "tsx scripts/demo.ts"
+    "demo": "tsx scripts/demo.ts",
+    "seed": "tsx scripts/seed.ts",
+    "verify-resonance": "tsx scripts/verify-resonance.ts"
   },
   "dependencies": {
+    "@hydra_db/node": "^0.1.2",
     "dotenv": "^16.4.5",
     "express": "^4.19.2",
     "spectrum-ts": "^1.2.1"

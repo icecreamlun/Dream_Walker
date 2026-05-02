@@ -13,11 +13,15 @@ function opt(key: string, fallback: string): string {
 export const env = {
   gmiApiKey: need("GMI_API_KEY"),
   gmiT2vModel: opt("GMI_T2V_MODEL", "pixverse-v5.6-t2v"),
-  gmiLlmBase: opt("GMI_LLM_BASE", "https://api.gmi-serving.com"),
-  gmiLlmModel: opt("GMI_LLM_MODEL", "Qwen/Qwen3-Next-80B-A3B-Instruct"),
+  gmiLlmBaseUrl: opt("GMI_LLM_BASE_URL", ""),
+  gmiLlmModel: opt("GMI_LLM_MODEL", ""),
   photonProjectId: need("PHOTON_PROJECT_ID"),
   photonProjectSecret: need("PHOTON_PROJECT_SECRET"),
   photonApiBase: opt("PHOTON_API_BASE", "https://spectrum.photon.codes"),
+  hydraApiKey: need("HYDRA_API_KEY"),
+  hydraBaseUrl: opt("HYDRA_BASE_URL", "https://api.hydradb.com"),
+  hydraNamespace: opt("HYDRA_NAMESPACE", "dream_walker"),
+  openaiApiKey: opt("OPENAI_API_KEY", ""),
   port: Number(opt("PORT", "8000")),
   publicUrl: opt("PUBLIC_URL", "http://localhost:8000").replace(/\/$/, ""),
 };

@@ -128,6 +128,8 @@ export function createServer() {
           .replace("{{META}}", "")
           .replace("{{VIDEO_BLOCK}}", `<div class="pending">no dream with id ${escape(req.params.id)}</div>`)
           .replace("{{RAW_TEXT}}", "")
+          .replace("{{DIVINATION_BLOCK}}", "")
+          .replace("{{RESONANCE_BLOCK}}", "")
           .replace("{{ERROR_BLOCK}}", "")
           .replace("{{REFRESH_SCRIPT}}", ""),
       );
@@ -146,15 +148,51 @@ export function createServer() {
       refreshScript = `<script>setTimeout(()=>location.reload(), 5000)</script>`;
     }
 
+    // Divination block
+    let divinationBlock = "";
+    if (d.divination) {
+      divinationBlock = `
+  <div class="divination">
+    <div class="gua-header">
+      <span class="gua-name">${escape(d.divination.gua_name)}</span>
+      <span class="gua-meaning">${escape(d.divination.gua_meaning)}</span>
+    </div>
+    <div class="interpretation">${escape(d.divination.interpretation)}</div>
+  </div>`;
+    }
+
+    // Resonance block
+    let resonanceBlock = "";
+    if (d.resonance && d.resonance.length > 0) {
+      const cards = d.resonance
+        .map(
+          (r) => `
+    <div class="resonance-card">
+      <div class="card-summary">${escape(r.summary)}</div>
+      <div class="card-meta">dreamer ${escape(r.user_phone_masked)} · resonance ${(r.score * 100).toFixed(0)}%</div>
+    </div>`,
+        )
+        .join("");
+      resonanceBlock = `
+  <div class="resonance">
+    <div class="resonance-title">Others who dreamt alike last night</div>
+    <div class="resonance-cards">${cards}
+    </div>
+  </div>`;
+    }
+
     const errorBlock = d.error ? `<div class="err">${escape(d.error)}</div>` : "";
+    const title = d.structured?.title ?? "Your dream";
     const meta = `${new Date(d.created_at).toLocaleString()} · ${escape(d.user_phone)}`;
 
     res.send(
       tpl
-        .replace("{{TITLE}}", "Your dream")
+        .replace("{{TITLE}}", escape(title))
         .replace("{{META}}", meta)
         .replace("{{VIDEO_BLOCK}}", videoBlock)
         .replace("{{RAW_TEXT}}", escape(d.raw_text))
+        .replace("{{DIVINATION_BLOCK}}", divinationBlock)
+        .replace("{{RESONANCE_BLOCK}}", resonanceBlock)
         .replace("{{ERROR_BLOCK}}", errorBlock)
         .replace("{{REFRESH_SCRIPT}}", refreshScript),
     );

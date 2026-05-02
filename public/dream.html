@@ -20,6 +20,7 @@
     --blood: #a04a36;
     --serif: "EB Garamond", "Iowan Old Style", Georgia, serif;
     --mono: "IBM Plex Mono", ui-monospace, "SF Mono", Menlo, monospace;
+    --card-bg: rgba(255,255,255,0.03);
   }
   * { box-sizing: border-box; }
   html, body { margin: 0; }
@@ -122,6 +123,57 @@
     margin: 0;
   }
 
+  /* Divination section */
+  .divination {
+    margin-top: 28px; padding: 24px;
+    background: var(--card-bg);
+    border-radius: 12px;
+    border: 1px solid rgba(199,154,74,0.15);
+  }
+  .gua-header {
+    display: flex; align-items: baseline; gap: 12px;
+    margin-bottom: 12px;
+  }
+  .gua-name {
+    font-size: 32px; font-weight: 300; color: var(--brass);
+    font-family: "Songti SC", "Noto Serif CJK SC", serif;
+  }
+  .gua-meaning { color: var(--ink-soft); font-size: 13px; }
+  .interpretation {
+    font-size: 14px; line-height: 1.65; color: var(--ink);
+    opacity: 0.9;
+  }
+
+  /* Resonance section */
+  .resonance {
+    margin-top: 32px;
+  }
+  .resonance-title {
+    font-family: var(--mono);
+    font-size: 10px;
+    letter-spacing: 0.22em;
+    text-transform: uppercase;
+    color: var(--ink-faint);
+    margin-bottom: 16px;
+  }
+  .resonance-cards {
+    display: flex; flex-direction: column; gap: 12px;
+  }
+  .resonance-card {
+    padding: 16px 20px;
+    background: var(--card-bg);
+    border-radius: 10px;
+    border: 1px solid var(--rule);
+  }
+  .resonance-card .card-summary {
+    font-size: 14px; line-height: 1.5; color: var(--ink);
+    font-style: italic; opacity: 0.85;
+  }
+  .resonance-card .card-meta {
+    margin-top: 8px; font-size: 11px; color: var(--ink-faint);
+    font-family: var(--mono);
+  }
+
   .err {
     margin-top: 18px;
     padding: 12px 14px;
@@ -169,6 +221,10 @@
     <div class="label">As told</div>
     <p class="raw-body">{{RAW_TEXT}}</p>
   </div>
+
+  {{DIVINATION_BLOCK}}
+
+  {{RESONANCE_BLOCK}}
 
   {{ERROR_BLOCK}}
 

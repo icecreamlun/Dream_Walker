@@ -1,17 +1,51 @@
 import { mkdir, readFile, writeFile } from "node:fs/promises";
 import { dirname } from "node:path";
 
+export interface Structured {
+  title: string;
+  summary: string;
+  characters: string[];
+  scenes: string[];
+  emotions: string[];
+  key_imagery: string[];
+}
+
+export interface VisualBrief {
+  color_palette: string;
+  camera_movement: string;
+  lighting: string;
+  mood_board_tags: string[];
+}
+
+export interface Divination {
+  gua_name: string;
+  gua_meaning: string;
+  interpretation: string;
+  visual_brief: VisualBrief;
+}
+
+export interface ResonanceCard {
+  dream_id: string;
+  user_phone_masked: string;
+  summary: string;
+  score: number;
+}
+
 export interface Dream {
   dream_id: string;
   user_phone: string;
   created_at: string; // ISO
   raw_text: string;
-  prompt: string;       // the prompt actually sent to PixVerse
+  prompt: string;
   status: "queued" | "generating" | "ready" | "failed";
   request_id?: string;
   video_url?: string;
   thumbnail_url?: string;
   error?: string;
+  structured?: Structured;
+  divination?: Divination;
+  embedding?: number[];
+  resonance?: ResonanceCard[];
 }
 
 const FILE = "data/dreams.json";
